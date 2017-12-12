@@ -22,9 +22,60 @@ namespace Blobs
             container.CreateIfNotExists();
 
             CloudBlockBlob blockBlob = container.GetBlockBlobReference("examobjectives");
-            using (var fileStram = System.IO.File.OpenRead(@"Downloads\532_OD_Changes.pdf"))
+            using (var fileStram = System.IO.File.OpenRead(@"C:\Users\amol.gholap\Downloads\532_OD_Changes.pdf"))
             {
                 blockBlob.UploadFromStream(fileStram);
+            }
+            //ListAttributes(container);
+
+            // CopyBlob(container);
+            UploadBlobSubDirectory(container);
+
+        }
+
+        static void ListAttributes(CloudBlobContainer container)
+        {
+            container.FetchAttributes();
+            Console.WriteLine("Container Name " + container.StorageUri.PrimaryUri.ToString());
+            Console.WriteLine("Last Modified " + container.Properties.LastModified.ToString());
+            SetMetadata(container);
+            ListMetadata(container);
+        }
+        static void ListMetadata(CloudBlobContainer container)
+        {
+            container.FetchAttributes();
+            Console.WriteLine("Metadta:\n");
+            foreach (var item in container.Metadata)
+            {
+                Console.WriteLine("Key " + item.Key);
+                Console.WriteLine("Value " + item.Value);
+            }
+
+        }
+        static void SetMetadata(CloudBlobContainer container)
+        {
+            container.Metadata.Clear();
+            container.Metadata.Add("author", "Amol Gholap");
+            container.Metadata["authoredOn"] = "Dec 12, 2017";
+            container.SetMetadata();
+        }
+
+        static void CopyBlob(CloudBlobContainer container)
+        {
+            CloudBlockBlob blockBlob = container.GetBlockBlobReference("examobjectives");
+            CloudBlockBlob copyToBlockBlob = container.GetBlockBlobReference("examobjectives-copy");
+            copyToBlockBlob.StartCopyAsync(new Uri(blockBlob.Uri.AbsoluteUri));
+        }
+
+        static void UploadBlobSubDirectory(CloudBlobContainer container)
+        {
+            CloudBlobDirectory directory = container.GetDirectoryReference("parent-directory");
+            CloudBlobDirectory subdirectory = directory.GetDirectoryReference("child-directory");
+            CloudBlockBlob blockBlob = subdirectory.GetBlockBlobReference("newexamobjectives");
+
+            using (var fileStream = System.IO.File.OpenRead(@"C:\Users\amol.gholap\Downloads\532_OD_Changes.pdf"))
+            {
+                blockBlob.UploadFromStream(fileStream);
             }
         }
     }
